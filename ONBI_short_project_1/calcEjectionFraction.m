@@ -26,5 +26,17 @@ for m = data(1).MESA_indices(n)
     
 end
 
+for n = 1:200
+for t = data(1).TEST_indices(n)
+    
+    data(t).TEST.strokeVolume = data(t).strokeVolume;
+    data(t).TEST.ejectionFraction = data(t).ejectionFraction;
+    
+    TEST_strokeVolumes(n) = data(t).strokeVolume;
+    TEST_ejectionFractions(n) = data(t).ejectionFraction;
+    
+end
+end
+
 end
 end

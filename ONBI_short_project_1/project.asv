@@ -769,10 +769,10 @@ visualisingMode1
 visualisingMode2 
 
 %% PCA analysis of 'ratio thickness' (Ernesto)
-for i = 1:data(1).DETERMINE_indices
-ratio(i,:) = data(i).dia_dEPI2ENDO ./ data(i).sys_dEPI2ENDO;
-end
-ratio_thickness = ratio;
+for i = 1: data(1).DETERMINE_indices
+data(i).dia_dEPI2ENDO
+ratio_thickness = ED_thick ./ ES_thick;
+
 % As the ratios are by definition positive numbers, I consider that it is
 % better to perform the analysis in the LOG space. Anyway, if you prefer
 % you can perform the analisis as Cartesian variables by removing the

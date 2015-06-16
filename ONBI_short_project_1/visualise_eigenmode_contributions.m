@@ -11,13 +11,9 @@ nEig = 15;
 hold on
 plot(dia_CS(1:100))
 plot(sys_CS(1:100))
-for eigVal = 1:nEig
-    plot(eigVal,(dia_CS(eigVal)),'o')
-    dia_CS(eigVal)
-end
-for eigVal = 1:nEig
-    plot(eigVal,(sys_CS(eigVal)),'*')
-end
+plot(1:nEig,(dia_CS(1:nEig)),'o')
+% dia_CS(1:nEig)
+plot(1:nEig,(sys_CS(1:nEig)),'*')
 xlabel 'eigenmode'
 ylabel 'contribution'
 legend 'diastole' 'systole'
@@ -27,10 +23,8 @@ hold off
 figure
 hold on
 plot(dia_sys_CS(1:100))
-for eigVal = 1:nEig
-    plot(eigVal,(dia_sys_CS(eigVal)),'o')
-    dia_sys_CS(eigVal)
-end
+eigVal = 1:nEig
+plot(eigVal,(dia_sys_CS(eigVal)),'o')
 xlabel 'eigenmode'
 ylabel 'contribution'
 legend 'diastole and systole'

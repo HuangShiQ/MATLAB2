@@ -1,16 +1,24 @@
 %% FIND MYOCARDIUM THICKNESS EIGENMODES
-
 for i = 1:401
-dia_sys_dEPI2ENDOs(i,:) = [dia_dEPI2ENDOs(i,:)' ; sys_dEPI2ENDOs(i,:)']' ;
+    dia_sys_dEPI2ENDOs(i,:) = [dia_dEPI2ENDOs(i,:)' ; sys_dEPI2ENDOs(i,:)']' ;
+end
+
+for m = data(1).DETERMINE_indices
+    DETERMINE_dia_sys_dEPI2ENDOs(m,:) = [dia_dEPI2ENDOs(m,:)' ; sys_dEPI2ENDOs(m,:)']' ;
+end
+
 for m = data(1).MESA_indices
     MESA_dia_sys_dEPI2ENDOs(m,:) = [dia_dEPI2ENDOs(m,:)' ; sys_dEPI2ENDOs(m,:)']' ;
 end
-end
+
+
+trainingshapes =  MESA_dia_sys_dEPI2ENDOs ;
+
 %%  PCA on myocardium thicknesses
 
-dia_sys_dEPI2ENDOs_cov_mat = cov(dia_sys_dEPI2ENDOs);
+dia_sys_dEPI2ENDOs_cov_mat = cov(trainingshapes);
 
-%% PCA - find eigenvectors of covariance matrix 
+%% PCA - find eigenvectors of covariance matrix
 [dia_sys_dEPI2ENDOs_eigenvectors,dia_sys_dEPI2ENDOs_eigenvalues]=eig(dia_sys_dEPI2ENDOs_cov_mat);
 
 nEigenvalues = 15;
@@ -25,10 +33,10 @@ principle_dia_sys_dEPI2ENDOs_eigenvalues_contribution = sorted_dia_sys_dEPI2ENDO
 
 principle_dia_sys_dEPI2ENDOs_eigenvectors = zeros(2178, nEigenvalues);
 
-for n = 1:nEigenvalues  
+for n = 1:nEigenvalues
     [dia_sys_dEPI2ENDOs_eRows(1,n), dia_sys_dEPI2ENDOs_eCols(1,n)] = find(dia_sys_dEPI2ENDOs_eigenvalues == principle_dia_sys_dEPI2ENDOs_eigenvalues(n));
-  
-    principle_dia_sys_dEPI2ENDOs_eigenvectors(:,n) = dia_sys_dEPI2ENDOs_eigenvectors(:, dia_sys_dEPI2ENDOs_eCols(1,n)); 
+    
+    principle_dia_sys_dEPI2ENDOs_eigenvectors(:,n) = dia_sys_dEPI2ENDOs_eigenvectors(:, dia_sys_dEPI2ENDOs_eCols(1,n));
 end
 
 %% Find max model parameter value (b) , using +/- sqrt(eigenvalue) as b
@@ -38,14 +46,23 @@ dia_sys_dEPI2ENDOs_max_b = sqrt(principle_dia_sys_dEPI2ENDOs_eigenvalues);
 
 
 %% PDM - find mean shape
-dia_sys_dEPI2ENDOs_mean = mean(dia_sys_dEPI2ENDOs);
+dia_sys_dEPI2ENDOs_mean = mean(trainingshapes);
 
 %% PDM - find b values for the DETERMINE and MESA cases
 for b = 1:nEigenvalues
+    
+    for i = data(1).TEST_indices'
+        for d = find(data(1).TEST_indices==i)
+            
+            TEST_dia_sys_dEPI2ENDOs_b(d,b) = (principle_dia_sys_dEPI2ENDOs_eigenvectors(:,b)')*(dia_sys_dEPI2ENDOs(i,:)' - dia_sys_dEPI2ENDOs_mean');
+            
+        end
+    end
+    
     for i = data(1).DETERMINE_indices'
         for d = find(data(1).DETERMINE_indices==i)
             
-           DETERMINE_dia_sys_dEPI2ENDOs_b(d,b) = (principle_dia_sys_dEPI2ENDOs_eigenvectors(:,b)')*(dia_sys_dEPI2ENDOs(i,:)' - dia_sys_dEPI2ENDOs_mean');
+            DETERMINE_dia_sys_dEPI2ENDOs_b(d,b) = (principle_dia_sys_dEPI2ENDOs_eigenvectors(:,b)')*(dia_sys_dEPI2ENDOs(i,:)' - dia_sys_dEPI2ENDOs_mean');
             
         end
     end

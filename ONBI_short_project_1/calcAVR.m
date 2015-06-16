@@ -22,5 +22,14 @@ for m = data(1).MESA_indices'
 %   data(m).MESA_sys_myo_AVratio = ((pi^(1/3))*data(m).MESA_sys_myo_total_area)/((6*data(m).systolic.myoVolume)^(2/3));
 end
 
+for T = data(1).TEST_indices'
+     data(T).TEST_dia_endo_AVratio = ((pi^(1/3))*((6*data(T).diastolic.endo.volume)^(2/3)) )/(data(T).TEST_dia_endo_total_area);
+     data(T).TEST_dia_epi_AVratio = ((pi^(1/3))*((6*data(T).diastolic.epi.volume)^(2/3)))/(data(T).TEST_dia_epi_total_area)   
+     data(T).TEST_sys_endo_AVratio = ((pi^(1/3))*((6*data(T).systolic.endo.volume)^(2/3)))/(data(T).TEST_sys_endo_total_area)  
+     data(T).TEST_sys_epi_AVratio = ((pi^(1/3))*((6*data(T).systolic.epi.volume)^(2/3)))/(data(T).TEST_sys_epi_total_area)
+%   data(m).MESA_dia_myo_AVratio = ((pi^(1/3))*data(m).MESA_dia_myo_total_area)/((6*data(m).diastolic.myoVolume)^(2/3));
+%   data(m).MESA_sys_myo_AVratio = ((pi^(1/3))*data(m).MESA_sys_myo_total_area)/((6*data(m).systolic.myoVolume)^(2/3));
+end
+
 
 end

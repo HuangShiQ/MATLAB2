@@ -4,7 +4,7 @@ for param1 = 1:size(trainingdata,2)
     for param2 = 32
         for param3 = 1 % param3 is EF
             tic
-            obj = fitcdiscr(trainingdata(:,[param1, param2 param3]), names);
+            obj = fitcdiscr(trainingdata(:,[param1, param2, param3]), names);
             
             resuberror = resubLoss(obj); %proportion of misclassified observations
             LDAclassification_rates(param1, param2) = 1 - resuberror;

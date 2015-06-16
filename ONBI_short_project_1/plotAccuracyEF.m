@@ -3,19 +3,20 @@ function plotAccuracyEF(data, accuracy, positive, negative, positiveName, negati
 positiveName
 negativeName
 figure
-subplot 121
+
 plot(accuracy(1,1:AccXMax));
 max_accuracy = max(accuracy)
 %find threshold that gives greatest accuracy
 threshold = find(accuracy == max(accuracy));
 threshold = threshold(1) %incase there are two maximum accuracies
 hold on
+set(gca,'FontSize',22);
 plot([threshold threshold],[0.5 1], 'g')
 plot([0 AccXMax],[max(accuracy)  max(accuracy)], 'g')
 ylabel 'accuracy'
-% xlabel 'surface area to volume ratio (AVR) '
-
-subplot 122
+ xlabel 'ejection fraction threshold (%) '
+figure
+subplot 121
 nbins = 30;
 hold on
 % histogram(cell2mat({data(data(1).MESA_indices).MESA_sys_endo_AVratio})*100,nbins)
@@ -25,7 +26,7 @@ histogram(negative,nbins)
 % xlabel 'surface area to volume ratio (AVR) (%)'
 % ylabel 'frequency'
 % legend 'positive' 'negative'
-legend positive negative
+legend ('positive', 'negative', 'Location', 'Best')
 % subplot 122
 % 
 % hold on

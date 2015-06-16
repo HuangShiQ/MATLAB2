@@ -5,6 +5,7 @@ for i = 1:401
     [~,~,data(i).dia_dEPI2ENDO] = vtkClosestElement( data(i).diastolic.endo , data(i).diastolic.epi.xyz );
     [~,~,data(i).sys_dEPI2ENDO] = vtkClosestElement( data(i).systolic.endo , data(i).systolic.epi.xyz );
     
+    
     diastolicEndos(i,:) = data(i).diastolic.endo.xyz(:);
     systolicEndos(i,:)= data(i).systolic.endo.xyz(:);
     diastolicEpis(i,:) = data(i).diastolic.epi.xyz(:);
@@ -52,16 +53,23 @@ MESAmeanSysEndo = mean(systolicEndos(data(1).MESA_indices,:),1);
 MESAmeanSysEpi = mean(systolicEpis(data(1).MESA_indices,:),1);
 MESAmeanSysT = mean(sys_dEPI2ENDOs(data(1).MESA_indices,:),1);
 
+%
 DETERMINEdiaMyoThicknessVariance = cell2mat({data(data(1).DETERMINE_indices).dia_dEPI2ENDO_vars}) ;
 MESAdiaMyoThicknessVariance = cell2mat({data(data(1).MESA_indices).dia_dEPI2ENDO_vars});
+TESTdiaMyoThicknessVariance = cell2mat({data(data(1).TEST_indices).dia_dEPI2ENDO_vars});
+
 DETERMINEsysMyoThicknessVariance = cell2mat({data(data(1).DETERMINE_indices).sys_dEPI2ENDO_vars});
 MESAsysMyoThicknessVariance = cell2mat({data(data(1).MESA_indices).sys_dEPI2ENDO_vars});
+TESTsysMyoThicknessVariance = cell2mat({data(data(1).TEST_indices).sys_dEPI2ENDO_vars});
 
 DETERMINEmyoTchangesVar = var(cell2mat({data(data(1).DETERMINE_indices).myo_T_changes}));
 MESAmyoTchangesVar = var(cell2mat({data(data(1).MESA_indices).myo_T_changes}));
+TESTmyoTchangesVar = var(cell2mat({data(data(1).TEST_indices).myo_T_changes}));
 
 DETERMINEdeltaMeanT = deltaMeanT(data(1).DETERMINE_indices);
 MESAdeltaMeanT = deltaMeanT(data(1).MESA_indices);
+TESTdeltaMeanT = deltaMeanT(data(1).TEST_indices);
 
 DETERMINE_DiaSys_dEPI2ENDO_vars = cell2mat({data(data(1).DETERMINE_indices).dia_sys_dEPI2ENDO_vars});
 MESA_DiaSys_dEPI2ENDO_vars = cell2mat({data(data(1).MESA_indices).dia_sys_dEPI2ENDO_vars});
+TEST_DiaSys_dEPI2ENDO_vars = cell2mat({data(data(1).TEST_indices).dia_sys_dEPI2ENDO_vars});

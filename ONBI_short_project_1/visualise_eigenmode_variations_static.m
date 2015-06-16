@@ -1,7 +1,6 @@
 %% visualise modes of variation - static
 % close all
-visualisingMode1 = 1
-visualisingMode2 = 2
+
 nStd = 3 %number of standard deviations
 x = [-60 ; 40];
 y = [-65 ;50];
