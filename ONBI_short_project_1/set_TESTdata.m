@@ -1,6 +1,6 @@
-TESTdata = zeros(200,83);
 
-TESTdata(:,1) = [TEST_ejectionFractions'];
+
+TESTdata(:,1) = [cell2mat({data(data(1).TEST_indices).ejectionFraction})];
 %modes of variation
 % TESTdata(:,2:6) = [TEST_sys_myo_b(:,1:5) ]; %from the PDM
 % TESTdata(:,7:11) = [TEST_dia_myo_b(:,1:5) ];

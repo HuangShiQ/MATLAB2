@@ -345,9 +345,25 @@ disp('started calculating accuracies')
 %pass the positive and negative condition
 [data, accuracyEF, sensitivityEF, specificityEF] = calcAccuracy( data, cell2mat({data(data(1).DETERMINE_indices).ejectionFraction}) ,  cell2mat({data(data(1).MESA_indices).ejectionFraction}), 1,100,1);
 
-figure
-plotROC(sensitivityEF, specificityEF)
+hfigure
+plotROC(sensitivity, specificity)
+plot(specificity(find(accuracy == max(accuracy))), sensitivity(find(accuracy == max(accuracy))),'.','markersize',13)
+ l=legend(hplot,['sensitivity versus specificity', 'maximum accuracy','location','best']);
+
+legend ('sensitivity versus specificity', 'maximum accuracy','location','best')
+set(gca,'XTick',[0:0.2:1])
+set(gca,'YTick',[0:0.2:1])
+set(gca,'fontsize',20)
+grid on
+grid minor
 title 'Ejection fraction'
+
+S(1,:) = sensitivity;
+S(2,:) = specificity;
+acc = mean(S);
+max(acc)
+hold on
+plot(acc)
 
 plotAccuracyEF(data, accuracyEF, cell2mat({data(data(1).DETERMINE_indices).ejectionFraction}) ,  cell2mat({data(data(1).MESA_indices).ejectionFraction}), 'DETERMINE', 'MESA' , 100)
 xlabel 'ejection fraction (%)'
@@ -380,6 +396,7 @@ TEST_sys_endo_AVratios = cell2mat({data(:).TEST_sys_endo_AVratio})' ;
 TEST_dia_endo_AVratios = cell2mat({data(:).TEST_dia_endo_AVratio})' ;
 TEST_sys_epi_AVratios = cell2mat({data(:).TEST_sys_epi_AVratio})' ;
 TEST_dia_epi_AVratios = cell2mat({data(:).TEST_dia_epi_AVratio})' ;
+
 
 
 figure
@@ -722,15 +739,33 @@ for b = 1:nEigenvalues
         end
     end
 end
+%%
 
 % ERNESTO PCA b values for all 100 modes
-DATA = training_dia_sys_myo_shapes';
-m = mean(DATA,2);
+% DATA = training_dia_sys_myo_shapes';
+for i = 1:401
+    dia_sys_dEPI2ENDOs(i,:) = [dia_dEPI2ENDOs(i,:)' ; sys_dEPI2ENDOs(i,:)']' ;
+end
+
+for m = data(1).DETERMINE_indices'
+    DETERMINE_dia_sys_dEPI2ENDOs(m,:) = [dia_dEPI2ENDOs(m,:)' ; sys_dEPI2ENDOs(m,:)']' ;
+end
+
+for m = data(1).MESA_indices'
+    MESA_dia_sys_dEPI2ENDOs(m,:) = [dia_dEPI2ENDOs(m,:)' ; sys_dEPI2ENDOs(m,:)']' ;
+end
+
+MESA_dia_sys_dEPI2ENDOs( ~any(MESA_dia_sys_dEPI2ENDOs,2), : ) = []; 
+DETERMINE_dia_sys_dEPI2ENDOs( ~any(DETERMINE_dia_sys_dEPI2ENDOs,2), : ) = [];
+
+
+DATA = [DETERMINE_dia_sys_dEPI2ENDOs ; MESA_dia_sys_dEPI2ENDOs]';
+m = mean(MESA_dia_sys_dEPI2ENDOs',2);
 RES = bsxfun(@minus,DATA,m);
 [u,s,v] = svd(RES, 'econ');
 diag(s)
 Bcoefs = u.' * RES;
-max( abs( m + u*Bcoefs(:,2) - DATA(:,2) ))
+max( abs( m + u*Bcoefs(:,2) - DATA(:,2) ));
 PCA_bvalues_all100 = [Bcoefs(1:100,1:100)' ; Bcoefs(1:100,101:200)'];
 %
 
@@ -741,7 +776,7 @@ run('visualise_eigenmode_contributions.m')
 run('visualise_eigenmode_variations_moving.m')
 %% visualise modes - static
 visualisingMode1 = 1
-visualisingMode2 = 3
+visualisingMode2 = 14
 run('visualise_eigenmode_variations_static.m')
 %% play mode of variation movie
 figure
@@ -765,14 +800,15 @@ visualisingMode2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% find myocardium thickness eigenmodes
 run('find_myocardium_thickness_eigenmodes.m') ;%plots thicknesses and eigenmode contributions
-visualisingMode1 
+visualisingMode1 = 7
 visualisingMode2 
 
 %% PCA analysis of 'ratio thickness' (Ernesto)
-for i = 1: data(1).DETERMINE_indices
-data(i).dia_dEPI2ENDO
-ratio_thickness = ED_thick ./ ES_thick;
-
+for i = [data(1).DETERMINE_indices ; data(1).MESA_indices]'
+ratios(i,:) = data(i).dia_dEPI2ENDO ./ data(i).sys_dEPI2ENDO;
+end
+ratios( all(~ratios,2), : ) = [];
+ratio_thickness = ratios;
 % As the ratios are by definition positive numbers, I consider that it is
 % better to perform the analysis in the LOG space. Anyway, if you prefer
 % you can perform the analisis as Cartesian variables by removing the
@@ -881,10 +917,10 @@ tic
 % Ytrain = names(training(cvpart),:);
 % Xtest = trainingdata(test(cvpart),:);
 % Ytest = names(test(cvpart),:);
-paramIndices = [1:83];
+paramIndices = [1:size(trainingdata,2)];
 trainingdataLabels(paramIndices,:)
 rng(1);
-BaggedEnsemble = TreeBagger(300, trainingdata(:,paramIndices),names,'method','classification','OOBPred','On','oobvarimp','on') %'NVarToSample',100)
+BaggedEnsemble = TreeBagger(300,trainingdata(:,paramIndices),names,'method','classification','OOBPred','On','oobvarimp','on') %'NVarToSample',100)
 
 %"The OOBPermutedVarDeltaError array stores the increase in MSE averaged
 %over all trees in the ensemble and divided by the standard deviation taken over the trees, for each variable"
@@ -892,32 +928,58 @@ BaggedEnsemble = TreeBagger(300, trainingdata(:,paramIndices),names,'method','cl
 
 % BaggedEnsemble = fitensemble(Xtrain,Ytrain,'Bag',200,'Tree','Type','Classification')
 % oobErrorBaggedEnsemble = oobError(BaggedEnsemble);
-%%
+%
 % random forest - estimate feature importance
+
+importances(:,1) = [1:size(BaggedEnsemble.OOBPermutedVarDeltaError,2)]';
+importances(:,2) = BaggedEnsemble.OOBPermutedVarDeltaError';
+%%
 figure
+hold on
 % subplot 121
 % "For any variable, the measure is the increase in prediction error if the
 % values of that variable are permuted across the out-of-bag observations"
 % "By default, NVarToSample is equal to the square root of the total number
 % of variables for classification"
-bar(BaggedEnsemble.OOBPermutedVarDeltaError,0.5);
-sorted_importance = sort(BaggedEnsemble.OOBPermutedVarDeltaError,'descend');
-find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(1))
-% important1 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(1)),:)
-find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(2))
-% important2 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(2)),:)
-find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(3))
-% important3 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(3)),:)
-set(gca,'XTick',[1:size(BaggedEnsemble.OOBPermutedVarDeltaError,2)])
-% set(gca,'XTickLabel',trainingdataLabels(paramIndices,:))
-set(gca,'XTickLabel',paramIndices)
-ylim ([ -0.13 0.65])
-xlim ([ 1 size(paramIndices,2)-10])
-set(gca,'XTickLabelRotation',90,'TickLength',[0.5 1],'FontSize',12)
-grid on
-xlabel('Feature index')
-ylabel('out-of-bag feature importance')
+% bar(shape_modes_100_importances,0.6,'FaceColor',[0.1 1 0.1]);
+bar(BaggedEnsemble.OOBPermutedVarDeltaError) %,'-') %,0.6,'FaceColor',[0.6 0.9 1]);
 
+% sorted_importance = sort(BaggedEnsemble.OOBPermutedVarDeltaError,'descend');
+% find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(1))
+% % important1 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(1)),:)
+% find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(2))
+% % important2 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(2)),:)
+% find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(3))
+% % important3 = trainingdataLabels(find(BaggedEnsemble.OOBPermutedVarDeltaError == sorted_importance(3)),:)
+ set(gca,'XTick',[0:1:size(BaggedEnsemble.OOBPermutedVarDeltaError,2)])
+ set(gca,'XTickLabel',trainingdataLabels(paramIndices(1:1:end),:))
+
+% set(gca,'XTickLabel',0:10:size(BaggedEnsemble.OOBPermutedVarDeltaError,2))
+ylim ([ -0.3 1.5])
+xlim ([ 0 72])
+fontsize = 12;
+set(gca,'XTickLabelRotation',90,'TickLength',[0.01 0.6],'FontSize',fontsize)
+grid on
+grid minor
+set(gca, 'GridAlpha', 0.1)
+important_features = [1;14;30;50;54;64]
+markersize = 5;
+
+plot(2:16,BaggedEnsemble.OOBPermutedVarDeltaError(2:16),'o','markersize',markersize,'color','y','MarkerFaceColor','y') %shape modes
+plot(17:20,BaggedEnsemble.OOBPermutedVarDeltaError(17:20),'o','markersize',markersize,'color','m','MarkerFaceColor','m') %sphericity
+plot(21:31,BaggedEnsemble.OOBPermutedVarDeltaError(21:31),'o','markersize',markersize,'color','c','MarkerFaceColor','c') %thickness stats
+plot(32:40,BaggedEnsemble.OOBPermutedVarDeltaError(32:40),'o','markersize',markersize,'color','r','MarkerFaceColor','r') %segment thickness variance
+plot(41:49,BaggedEnsemble.OOBPermutedVarDeltaError(41:49),'o','markersize',markersize,'color','g','MarkerFaceColor','g') %segment thickness mean
+plot(50:53,BaggedEnsemble.OOBPermutedVarDeltaError(50:53),'o','markersize',markersize,'color','b','MarkerFaceColor','b') %Volumes
+plot(54:57,BaggedEnsemble.OOBPermutedVarDeltaError(54:57),'^','markersize',markersize,'color','b','MarkerFaceColor','b') %log volumes
+plot(58:72,BaggedEnsemble.OOBPermutedVarDeltaError(58:72),'o','markersize',markersize,'color','k','MarkerFaceColor','k') %Thickness modes
+plot(important_features,BaggedEnsemble.OOBPermutedVarDeltaError(important_features),'k*','markersize',15) %,0.6,'FaceColor',[0.6 0.9 1]);
+labels = num2str((1:size(BaggedEnsemble.OOBPermutedVarDeltaError,2))','%d');    %'
+text(importances(important_features,1)+2, importances(important_features,2)+0.05,trainingdataLabels(important_features,:), 'horizontal','left', 'vertical','bottom','rotation',90,'FontSize',fontsize,'BackgroundColor','none')
+
+xlabel('Feature index')
+ylabel(' ''out-of-bag'' feature importance')
+%%
 % subplot 122
 % hold on
 % plot([0 300], [0.07 0.07])
@@ -926,47 +988,52 @@ ylabel('out-of-bag feature importance')
 % ylabel 'Out-of-bag classification error';
 % legend ([num2str(0.07)])
 toc
-%%
+
+%
 tic
 % for n = 1:2
 %     paramIndices = paramIndices + (n-1)*33
 % n
 
 figure('name','random forest classification cross-validation');
-% plot(loss(BaggedEnsemble,Xtest,Ytest,'mode','cumulative'));
+
 xlabel('Number of trees');
 ylabel('classification error');
 hold on
-%
+
 %K-FOLD
 %original sample is randomly partitioned into k equal sized subsamples
 % k-1 of the subsamples are used as training data.
 %cross-validation repeated k times
 rng(1);
 k = 5
-kfold_cross_validatedBE = fitensemble(trainingdata(:,paramIndices),names,'Bag',300,'Tree','type','classification','kfold',k);
+kfold_cross_validatedBE = fitensemble(trainingdata(:,50),names,'Bag',300,'Tree','type','classification','kfold',k);
 kfoldlossplot = kfoldLoss(kfold_cross_validatedBE,'mode','cumulative')
-plot(kfoldlossplot,'g.'); %kfold =5
-
+plot(kfoldlossplot,'r-.'); %kfold =5
+set(gca,'FontSize',12)
 %  
 %LEAVE-ONE-OUT
 % when 'leaveout' is set to 'on' , kfold = number of observations 
 rng(1);
-leaveout_cross_validatedBE = fitensemble(trainingdata(:,paramIndices),names,'Bag',300,'Tree','type','classification') %,'leaveout','on');
+leaveout_cross_validatedBE = fitensemble(trainingdata(:,50),names,'Bag',300,'Tree','type','classification','leaveout','on');
 kfoldlossLOOplot = kfoldLoss(leaveout_cross_validatedBE, 'mode','cumulative')
 plot(kfoldlossLOOplot,'k-'); %kfold =200
+set(gca,'FontSize',12)
 % imp = predictorImportance(leaveout_cross_validatedBE)
 % figure; bar(imp)
 % end
 toc
 %
+grid on
+grid minor
+set(gca, 'GridAlpha', 0.1)
 % plot(oobLoss(BaggedEnsemble,'mode','cumulative'),'g.');
 line = 0.13;
 plot([0 300] ,[line line])
 % legend(['kfold, k = ',num2str(k),])
-legend 'kfold, k = 5' ' leave one out' 'error = 0.13'
+legend 'kfold, k = 5' ' leave one out' 'optimum ejection fraction error'
 % 'leave-one-out ', num2str(line)']); 
-
+ylim([0.12 0.23])
 %%
 % cvmodel = crossval(obj,'leaveout','on');
 % cverror = kfoldLoss(cvmodel);
@@ -1018,8 +1085,9 @@ legend 'kfold, k = 5' ' leave one out' 'error = 0.13'
 
 
 %% TEST CLASSIFIER
-
-[TESTclassification.labels, TESTclassification.scores] = predict(leaveout_cross_validatedBE, TESTdata);
+rng(1);
+BE = fitensemble(trainingdata(:,paramIndices),names,'Bag',300,'Tree','type','classification') %
+[TESTclassification.labels, TESTclassification.scores] = predict(BE, TESTdata);
 %%
 MESA_num = sum((TESTclassification.labels == 'm'))
 DETERMINE_num = sum((TESTclassification.labels == 'd'))

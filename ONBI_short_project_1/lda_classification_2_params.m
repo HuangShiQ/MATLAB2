@@ -15,8 +15,7 @@ for param1 = 1:size(trainingdata,2)
         cvmodel = crossval(obj,'leaveout','on');
         cverror = kfoldLoss(cvmodel);
         LDAcross_validated_classification_rates(param1, param2) = 1 - cverror;
-        
-        
+                
     end
     toc
 end

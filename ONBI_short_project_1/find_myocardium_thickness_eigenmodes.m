@@ -11,7 +11,8 @@ for m = data(1).MESA_indices
     MESA_dia_sys_dEPI2ENDOs(m,:) = [dia_dEPI2ENDOs(m,:)' ; sys_dEPI2ENDOs(m,:)']' ;
 end
 
-
+MESA_dia_sys_dEPI2ENDOs( ~any(MESA_dia_sys_dEPI2ENDOs,2), : ) = []; 
+DETERMINE_dia_sys_dEPI2ENDOs( ~any(DETERMINE_dia_sys_dEPI2ENDOs,2), : ) = [];
 trainingshapes =  MESA_dia_sys_dEPI2ENDOs ;
 
 %%  PCA on myocardium thicknesses
@@ -112,3 +113,5 @@ run('visualisemodes_diastole_myo_thicknesses_bullseyes.m')
 % figure('name','systolic modes of variation')
 run('visualisemodes_systole_myo_thicknesses_bullseyes.m')
 % run('visualisemodes_systole__combined_modes_myo_thicknesses.m')
+
+ 

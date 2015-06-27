@@ -1,7 +1,7 @@
 %% visualise modes of variation - static
 % close all
 
-nStd = 3 %number of standard deviations
+nStd = 2%number of standard deviations
 x = [-60 ; 40];
 y = [-65 ;50];
 z = [-110 ; 20];

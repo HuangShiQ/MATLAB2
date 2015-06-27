@@ -9,10 +9,11 @@ for param1 = 2:33
             param1
             param2
             % SVMModel = fitcsvm(trainingdata, group, 'Standardize', true)
-            SVMModel = fitcsvm(trainingdata(:,[param1;param2]), names, 'KernelFunction', 'linear' );
+            SVMModel = fitcsvm(trainingdata(:,1), names, 'KernelFunction', 'linear' );
             %SVMModel = fitcsvm(trainingdata(:,:), names, 'KernelFunction', 'linear' );
-            
-            
+            CVSVMModel = crossval(SVMModel,'leaveout','on');
+          cverror = kfoldLoss(CVSVMModel)
+             1- cverror
             % cross-validation of the SVM
             %             CVSVMModel = crossval(SVMModel);
             %             misclassification_rate = kfoldLoss(CVSVMModel);
